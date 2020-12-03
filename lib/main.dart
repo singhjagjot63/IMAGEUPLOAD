@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
@@ -29,6 +30,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   File _selectedFile;
+  String greetings = '';
   // static final String uploadEndPoint = 'http://192.168.137.1/saveFile.php';
   String status = "";
   bool _inProcess = false;
@@ -94,18 +96,28 @@ class _MyHomePageState extends State<MyHomePage> {
   }*/
 
   startUpload() async {
-    final uri = Uri.parse("http://192.168.137.1/upload_img.php");
+    final uri = Uri.parse("http://192.168.1.9:80/upload_image.php");
     var request = http.MultipartRequest('POST', uri);
     var pic = await http.MultipartFile.fromPath("image", _selectedFile.path);
-    request.files.add(pic);
-    print('GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG');
-    var response = await request.send();
 
+    request.files.add(pic);
+
+    var response = await request.send();
+    print(response.statusCode);
     if (response.statusCode == 200) {
       print('Image Uploaded');
     } else {
       print('Image not uploaded');
     }
+  }
+
+  testing() async {
+    final response = await http.get('http://192.168.1.9:5000/');
+    final decoded = json.decode(response.body) as Map<String, dynamic>;
+    setState(() {
+      greetings = decoded['greetings'];
+    });
+    print(greetings);
   }
 
   /*upload(String fileName) {
@@ -158,8 +170,18 @@ class _MyHomePageState extends State<MyHomePage> {
                     onPressed: () {
                       startUpload();
                     }),
+                MaterialButton(
+                    color: Colors.blue,
+                    child: Text(
+                      "Test",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    onPressed: () {
+                      testing();
+                    }),
               ],
-            )
+            ),
+            Center(child: Text(greetings))
           ],
         ),
         (_inProcess)
